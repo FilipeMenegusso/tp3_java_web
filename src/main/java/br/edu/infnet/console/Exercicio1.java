@@ -5,7 +5,7 @@ import br.edu.infnet.integration.apichallenges.client.ApiEntitiesClient;
 
 import java.util.List;
 
-public class exercicio1 {
+public class Exercicio1 {
     public static void main(String[] args) throws Exception {
         List<Entity> entidades = ApiEntitiesClient.obterTodasAsEntidades();
 
