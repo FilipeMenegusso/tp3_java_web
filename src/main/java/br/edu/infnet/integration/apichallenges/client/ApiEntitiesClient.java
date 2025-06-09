@@ -1,12 +1,10 @@
 package br.edu.infnet.integration.apichallenges.client;
 import br.edu.infnet.integration.apichallenges.dto.Entity;
-import br.edu.infnet.integration.apichallenges.dto.EntityResponse;
+import br.edu.infnet.integration.apichallenges.dto.EntitiesResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class ApiEntitiesClient {
@@ -19,25 +17,25 @@ public class ApiEntitiesClient {
     private static final String OPTIONS = "OPTIONS";
 
     public static List<Entity> obterTodasAsEntidades() throws Exception {
-        HttpURLConnection conexao = abrirConexao(URL_BASE, GET);
-        BufferedReader leitor = lerResposta(conexao);
+        HttpURLConnection conexao = ApiUtil.abrirConexao(URL_BASE, GET);
+        BufferedReader leitor = ApiUtil.lerResposta(conexao);
 
         String jsonEntidades = leitor.readLine();
 
         leitor.close();
 
         ObjectMapper mapper = new ObjectMapper();
-        EntityResponse response = mapper.readValue(jsonEntidades, EntityResponse.class);
+        EntitiesResponse response = mapper.readValue(jsonEntidades, EntitiesResponse.class);
 
         return response.getEntities();
     }
 
     public static Entity obterEntidade(int id) throws Exception {
         String url = String.format("%s/%d", URL_BASE, id);
-        HttpURLConnection conexao = abrirConexao(url, GET);
+        HttpURLConnection conexao = ApiUtil.abrirConexao(url, GET);
 
         try {
-            BufferedReader leitor = lerResposta(conexao);
+            BufferedReader leitor = ApiUtil.lerResposta(conexao);
 
             String jsonEntidade = leitor.readLine();
 
@@ -56,17 +54,17 @@ public class ApiEntitiesClient {
 
     public static List<Entity> obterEntidadesPorCategoriaELimite(String categoria, int limite) throws Exception {
         String url = String.format("%s?categoria=%s&limite=%d", URL_BASE, categoria, limite);
-        HttpURLConnection conexao = abrirConexao(url, GET);
+        HttpURLConnection conexao = ApiUtil.abrirConexao(url, GET);
 
         try {
-            BufferedReader leitor = lerResposta(conexao);
+            BufferedReader leitor = ApiUtil.lerResposta(conexao);
 
             String jsonEntidades = leitor.readLine();
 
             leitor.close();
 
             ObjectMapper mapper = new ObjectMapper();
-            EntityResponse response = mapper.readValue(jsonEntidades, EntityResponse.class);
+            EntitiesResponse response = mapper.readValue(jsonEntidades, EntitiesResponse.class);
 
             return response.getEntities();
         } catch (FileNotFoundException e) {
@@ -78,7 +76,7 @@ public class ApiEntitiesClient {
     }
 
     public static Entity salvarEntidade(String nome) throws Exception {
-        HttpURLConnection conexao = (abrirConexao(URL_BASE, POST));
+        HttpURLConnection conexao = ApiUtil.abrirConexao(URL_BASE, POST);
         conexao.setConnectTimeout(10_000);
         conexao.setDoOutput(true);
         DataOutputStream out = new DataOutputStream(conexao.getOutputStream());
@@ -86,7 +84,7 @@ public class ApiEntitiesClient {
         out.flush();
         out.close();
 
-        BufferedReader leitor = lerResposta(conexao);
+        BufferedReader leitor = ApiUtil.lerResposta(conexao);
 
         String jsonEntidade = leitor.readLine();
 
@@ -95,7 +93,7 @@ public class ApiEntitiesClient {
 
     public static Entity atualizarEntidade(Entity entidade, String metodo) throws Exception {
         String url = String.format("%s/%d", URL_BASE, entidade.getId());
-        HttpURLConnection conexao = (abrirConexao(url, metodo));
+        HttpURLConnection conexao = ApiUtil.abrirConexao(url, metodo);
         conexao.setConnectTimeout(10_000);
         conexao.setDoOutput(true);
         DataOutputStream out = new DataOutputStream(conexao.getOutputStream());
@@ -103,7 +101,7 @@ public class ApiEntitiesClient {
         out.flush();
         out.close();
 
-        BufferedReader leitor = lerResposta(conexao);
+        BufferedReader leitor = ApiUtil.lerResposta(conexao);
         String jsonEntidade = leitor.readLine();
 
         return mapearParaEntidade(jsonEntidade);
@@ -111,10 +109,10 @@ public class ApiEntitiesClient {
 
     public static void deletarEntidade(int id) throws Exception {
         String url = String.format("%s/%d", URL_BASE, id);
-        HttpURLConnection conexao = abrirConexao(url, DELETE);
+        HttpURLConnection conexao = ApiUtil.abrirConexao(url, DELETE);
     }
     public static String obterOptions() throws Exception {
-        HttpURLConnection conexao = abrirConexao(URL_BASE, OPTIONS);
+        HttpURLConnection conexao = ApiUtil.abrirConexao(URL_BASE, OPTIONS);
 
         int responseCode = conexao.getResponseCode();
 
@@ -131,19 +129,5 @@ public class ApiEntitiesClient {
     private static Entity mapearParaEntidade(String jsonEntidade) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(jsonEntidade, Entity.class);
-    }
-
-    private static BufferedReader lerResposta(HttpURLConnection conexao) throws IOException {
-        return new BufferedReader(
-            new InputStreamReader(conexao.getInputStream(), StandardCharsets.UTF_8)
-        );
-    }
-
-    private static HttpURLConnection abrirConexao(String enderecoUrl, String metodo) throws IOException {
-        URL url = new URL(enderecoUrl);
-        HttpURLConnection conexao = (HttpURLConnection) url.openConnection();
-        conexao.setRequestMethod(metodo);
-        conexao.setRequestProperty("Content-Type", "application/json");
-        return conexao;
     }
 }
